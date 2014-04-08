@@ -508,6 +508,243 @@ void LimaDetector::init_device()
 				m_is_device_initialized = false;
 				set_state(Tango::FAULT);
 				return;
+<<<<<<< HEAD
+        }
+
+        //- reset image, allow to redefine type image according to  CurrentImageType of the HwDetInfoCtrlObj
+        m_ct->image()->reset();
+
+        //- reload Roi from property
+        INFO_STREAM<<"Reload ROI of detector from Roi property."<<endl;
+        Roi myRoi(0,0,0,0);
+        if((memorizedRoi.at(0)<0) || (memorizedRoi.at(1)<0) || (memorizedRoi.at(2)<=0) || (memorizedRoi.at(3)<=0)) //Roi not initialized, then we consider all detector area as Roi
+        {
+            Size size;
+            hw_det_info->getDetectorImageSize(size);
+        	myRoi= Roi(0, 0,size.getWidth(),size.getHeight());
+        }
+        else 																	//Roi is initialized, then we consider all memorizedRoi property values as Roi
+        {
+        	myRoi = Roi(memorizedRoi.at(0), memorizedRoi.at(1),memorizedRoi.at(2),memorizedRoi.at(3));
+        }
+        m_ct->image()->setRoi(myRoi);
+
+        //- reload Binning from property
+        INFO_STREAM<<"Reload BIN of detector from Binning property."<<endl;
+        Bin myBin(memorizedBinningH, memorizedBinningV);
+        m_ct->image()->setBin(myBin);
+
+        //- if Shutter available: creates dynamic attributes
+        if(m_ct->shutter()->hasCapability())
+        {
+            INFO_STREAM<<"Add shutter dynamic attributes."<<endl;
+
+            //- Create shutterMode attribute
+            CREATE_DEVSTRING_ATTRIBUTE(attr_shutterMode_read,MAX_ATTRIBUTE_STRING_LENGTH);
+            DynamicAttributeInfo dai;
+            dai.dev = this;
+            dai.tai.name = "shutterMode";
+            dai.tai.unit = " ";
+            dai.tai.data_format = Tango::SCALAR;
+            dai.tai.data_type = Tango::DEV_STRING;
+            dai.tai.writable = Tango::READ_WRITE;
+            dai.tai.disp_level = Tango::OPERATOR;
+            dai.tai.description = "Available Shutter Modes (Depending on camera):<br> \n MANUAL<br> \n AUTO_FRAME<br> \n AUTO_SEQUENCE<br>";
+ 
+            dai.rcb = DynamicAttributeReadCallback::instanciate(*this, &LimaDetector::read_shutterMode_callback);
+            dai.wcb = DynamicAttributeWriteCallback::instanciate(*this, &LimaDetector::write_shutterMode_callback);
+            //- add the attribute to the dam
+            m_dam->add_attribute(dai);
+
+            //- Create shutterOpenTime attribute
+            CREATE_SCALAR_ATTRIBUTE(attr_shutterOpenTime_read);
+            DynamicAttributeInfo dai2;
+            dai2.dev = this;
+            dai2.tai.name = "shutterOpenTime";
+            dai2.tai.unit = "ms";
+            dai2.tai.data_format = Tango::SCALAR;
+            dai2.tai.data_type = Tango::DEV_DOUBLE;
+            dai2.tai.writable = Tango::READ_WRITE;
+            dai2.tai.disp_level = Tango::OPERATOR;
+            dai2.tai.description = "Shutter open time";
+ 
+            dai2.rcb = DynamicAttributeReadCallback::instanciate(*this, &LimaDetector::read_shutterOpenTime_callback);
+            dai2.wcb = DynamicAttributeWriteCallback::instanciate(*this, &LimaDetector::write_shutterOpenTime_callback);
+            //- add the attribute to the dam
+            m_dam->add_attribute(dai2);
+
+            //- Create shutterOpenTime attribute
+            CREATE_SCALAR_ATTRIBUTE(attr_shutterCloseTime_read);
+            DynamicAttributeInfo dai3;
+            dai3.dev = this;
+            dai3.tai.name = "shutterCloseTime";
+            dai3.tai.unit = "ms";
+            dai3.tai.data_format = Tango::SCALAR;
+            dai3.tai.data_type = Tango::DEV_DOUBLE;
+            dai3.tai.writable = Tango::READ_WRITE;
+            dai3.tai.disp_level = Tango::OPERATOR;
+            dai3.tai.description = "Shutter close time";
+ 
+            dai3.rcb = DynamicAttributeReadCallback::instanciate(*this, &LimaDetector::read_shutterCloseTime_callback);
+            dai3.wcb = DynamicAttributeWriteCallback::instanciate(*this, &LimaDetector::write_shutterCloseTime_callback);
+            //- add the attribute to the dam
+            m_dam->add_attribute(dai3);
+
+            CREATE_DEVSTRING_ATTRIBUTE(attr_shutterState_read,MAX_ATTRIBUTE_STRING_LENGTH);
+            DynamicAttributeInfo dai4;
+            dai4.dev = this;
+            dai4.tai.name = "shutterState";
+            dai4.tai.unit = " ";
+            dai4.tai.data_format = Tango::SCALAR;
+            dai4.tai.data_type = Tango::DEV_STRING;
+            dai4.tai.writable = Tango::READ;
+            dai4.tai.disp_level = Tango::OPERATOR;
+            dai4.tai.description = "State of the Shutter (in case of manual mode) : OPEN/CLOSE/NOT_MANUAL_MODE";
+ 
+            dai4.rcb = DynamicAttributeReadCallback::instanciate(*this, &LimaDetector::read_shutterState_callback);
+            //- add the attribute to the dam
+            m_dam->add_attribute(dai4);
+        }
+
+        //- Set default nb frames of acquisition at start-up
+        INFO_STREAM<<"Set default nb. frames of acquisition at start-up to "<<attr_nbFrames_write<<"."<<endl;
+        m_ct->acquisition()->setAcqNbFrames(attr_nbFrames_write);
+
+        //- define parameters of ctSaving object used to store image in files
+        INFO_STREAM<<"Define parameters used to save image into a file."<<endl;
+        ImageType image_type;
+        hw_det_info->getCurrImageType(image_type);
+        m_saving_par.directory         = fileTargetPath;
+        m_saving_par.prefix            = filePrefix;
+        m_saving_par.imageType         = image_type;
+        m_saving_par.indexFormat       = fileIndexPattern;
+        m_saving_par.nextNumber        = 1;
+        m_saving_par.savingMode        = CtSaving::Manual;
+        m_saving_par.framesPerFile     = fileNbFrames;
+        m_saving_par.nbframes          = attr_nbFrames_write;
+
+        transform(fileFormat.begin(), fileFormat.end(),fileFormat.begin(), ::toupper);
+
+        if (fileFormat.compare("NXS") == 0)
+        {
+            m_saving_par.fileFormat = CtSaving::NXS;
+            m_saving_par.suffix = ".nxs";
+        }
+        else if(fileFormat.compare("EDF") == 0)
+        {
+            m_saving_par.fileFormat = CtSaving::EDF;
+            m_saving_par.suffix = ".edf";
+        }
+        else if(fileFormat.compare("CBF") == 0)
+        {
+            m_saving_par.fileFormat = CtSaving::CBFFormat;
+            m_saving_par.suffix = ".cbf";
+        }
+        else if(fileFormat.compare("TIFF") == 0)
+        {
+            m_saving_par.fileFormat = CtSaving::TIFFFormat;
+            m_saving_par.suffix = ".tiff";
+        }
+        else
+        {
+            m_saving_par.fileFormat = CtSaving::RAW;
+            m_saving_par.suffix = ".raw";
+        }
+        m_ct->saving()->setParameters(m_saving_par);
+
+        //video stuff
+        INFO_STREAM<<"Initialize video mode according to VideoMode property."<<endl;
+        std::map<string,VideoMode> 	mMyVideoMode;
+        mMyVideoMode["Y8"] 			= Y8;
+        mMyVideoMode["Y16"] 		= Y16;
+        mMyVideoMode["Y32"] 		= Y32;
+        mMyVideoMode["Y64"] 		= Y64;
+        mMyVideoMode["RGB555"] 		= RGB555;
+        mMyVideoMode["RGB565"] 		= RGB565;
+        //mMyVideoMode["RGB24"] 		= RGB24;
+        mMyVideoMode["RGB32"] 		= RGB32;
+        mMyVideoMode["BGR24"] 		= BGR24;
+        mMyVideoMode["BGR32"] 		= BGR32;
+        mMyVideoMode["BAYER_RG8"] 	= BAYER_RG8;
+        mMyVideoMode["BAYER_RG16"] 	= BAYER_RG16;
+        mMyVideoMode["I420"] 		= I420;
+        mMyVideoMode["YUV411"] 		= YUV411;
+        mMyVideoMode["YUV422"] 		= YUV422;
+        mMyVideoMode["YUV444"] 		= YUV444;
+
+        transform(detectorVideoMode.begin(), detectorVideoMode.end(),detectorVideoMode.begin(), ::toupper);
+        if(detectorVideoMode.compare("NONE") ==0)
+        {/*NOP*/
+        }
+        else
+        {
+            map<string,VideoMode>::iterator it = mMyVideoMode.find(detectorVideoMode);
+    		if(it!= mMyVideoMode.end())
+    		{
+    			m_ct->video()->setMode(it->second);
+    		}
+    		else
+    		{
+    			ERROR_STREAM<<"Initialization Failed : VideoMode "<<"("<<detectorVideoMode<<") is not supported!"<< endl;
+    			m_status_message<<"Initialization Failed : VideoMode "<<"("<<detectorVideoMode<<") is not supported!"<< endl;
+    			m_is_device_initialized = false;
+    			set_state(Tango::FAULT);
+    			return;
+    		}
+
+        }
+        //- Activate video mode in order to get notification associated to image acquisition
+        INFO_STREAM<<"Activate video mode in order to get notification for each acquired image."<< endl;
+        m_ct->video()->setActive(true);
+    }
+    catch(Exception& e)
+    {
+    	ERROR_STREAM<<"Initialization Failed : "<<e.getErrMsg()<<endl;
+        m_status_message <<"Initialization Failed : "<<e.getErrMsg( )<< endl;
+        m_is_device_initialized = false;
+        set_state(Tango::FAULT);
+        return;
+    }
+    catch(...)
+    {
+    	ERROR_STREAM<<"Initialization Failed : UNKNOWN"<<endl;
+        m_status_message <<"Initialization Failed : UNKNOWN"<< endl;
+        set_state(Tango::FAULT);
+        m_is_device_initialized = false;
+        return;
+    }
+
+    //----------------------------------------------------------------------------------
+    //- Create acquisition Task, State = INIT if Task could not be created !
+    INFO_STREAM<<"Create acquisition yat::DeviceTask."<<endl;
+    if(create_acquisition_task() == false )
+    {
+        set_state(Tango::FAULT);
+        m_is_device_initialized = false;
+        return;
+    }
+
+    //- Ensure to call this, only when sub device is already created by ClassFactory
+    if(LimaDetector::m_is_created)
+    {
+        //- force Init() on the specific sub device.
+        INFO_STREAM<<"Force Initialization on the specific sub device."<<endl;
+        ControlFactory::instance().init_specific_device(detectorType);
+    }
+
+    // everything seems ok
+    m_is_device_initialized = true;
+    LimaDetector::m_is_created = true;
+
+    //write at init, only if device is correctly initialized
+    if(m_is_device_initialized)
+    {
+    	INFO_STREAM<<"Write tango hardware at Init - acquisitionMode."<<endl;
+
+    	Tango::WAttribute &acquisitionMode = dev_attr->get_w_attr_by_name("acquisitionMode");
+    	m_acquisition_mode = memorizedAcquisitionMode;
+    	acquisitionMode.set_write_value(m_acquisition_mode);
+=======
 			}
 
 		}
@@ -562,6 +799,7 @@ void LimaDetector::init_device()
 		Tango::WAttribute &acquisitionMode = dev_attr->get_w_attr_by_name("acquisitionMode");
 		m_acquisition_mode = memorizedAcquisitionMode;
 		acquisitionMode.set_write_value(m_acquisition_mode);
+>>>>>>> upstream/master
 		write_acquisitionMode(acquisitionMode);
 
 		INFO_STREAM << "Write tango hardware at Init - triggerMode." << endl;
