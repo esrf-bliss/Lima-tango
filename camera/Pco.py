@@ -117,6 +117,13 @@ class Pco(PyTango.Device_4Impl):
         attr.set_value(val)
 
 #------------------------------------------------------------------
+#     lastImgRecorded attribute R
+#------------------------------------------------------------------
+    def read_lastImgRecorded(self, attr):
+        val  = _PcoCam.talk("lastImgRecorded")
+        attr.set_value(val)
+
+#------------------------------------------------------------------
 #    cocRunTime attribute R
 #------------------------------------------------------------------
     def read_cocRunTime(self, attr):
@@ -257,6 +264,10 @@ class PcoClass(PyTango.DeviceClass):
            PyTango.SCALAR,
            PyTango.READ]],
          'clXferPar':	  
+         [[PyTango.DevString,
+           PyTango.SCALAR,
+           PyTango.READ]],
+         'lastImgRecorded':	  
          [[PyTango.DevString,
            PyTango.SCALAR,
            PyTango.READ]],
