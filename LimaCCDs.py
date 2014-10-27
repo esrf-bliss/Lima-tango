@@ -345,16 +345,25 @@ class LimaCCDs(PyTango.Device_4Impl) :
                                                      d,function2Call)
                 self.__dict__[name] = callable_obj
                 return callable_obj
-        
+
         raise AttributeError('LimaCCDs has no attribute %s' % name)
 
-    def always_executed_hook(self) :
+
+    @Core.DEB_MEMBER_FUNCT
+    def apply_config(self) :
+        '''
+        Apply configuration. Identification of config to apply is found
+        in DS properties "ConfigurationDefaultName" and
+        "ConfigurationFilePath".
+        Apply by default "default" config.
+        '''
         if not self.__configInit:
             self.__configInit = True
             #Configuration mgt
             config_file_path = self.ConfigurationFilePath
             config_default_name = self.ConfigurationDefaultName
 
+            deb.Always("Applied config : %s : %s " % (config_file_path, config_default_name))
             self.__configDefaultActiveFlag = False
             try:
                 config = self.__control.config()
@@ -2174,9 +2183,14 @@ def main() :
             print 'SEB_EXP'
             import traceback
             traceback.print_exc()
-        
+
         U = PyTango.Util.instance()
         U.server_init()
+
+        # Configurations management (load default or custom config)
+        dev = U.get_device_list_by_class("LimaCCDs")
+        dev[0].apply_config()
+
 	try:
             export_default_plugins()
 	except:
