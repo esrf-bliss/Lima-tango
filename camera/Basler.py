@@ -135,13 +135,13 @@ class BaslerClass(PyTango.DeviceClass):
 _BaslerCam = None
 _BaslerInterface = None
 
-# packet_size = 8000 suppose the eth MTU is set at least to 8192 (Jumbo mode !)
-# otherwise frame transfer can failed, the package size must but 
+# packet_size = 1500 suppose the eth MTU is set at least to 1500 (default 
+# value) otherwise frame transfer can failed, the package size must but 
 # correspond to the MTU, see README file under Pylon-3.2.2 installation
 # directory for for details about network optimization.
 
 def get_control(cam_ip_address = "0", frame_transmission_delay = 0,
-                inter_packet_delay = 0, packet_size = 8000,**keys) :
+                inter_packet_delay = 0, packet_size = 1500,**keys) :
     print "cam_ip_address",cam_ip_address
     global _BaslerCam
     global _BaslerInterface
