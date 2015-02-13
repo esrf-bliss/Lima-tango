@@ -828,13 +828,6 @@ def get_control(HostName="", CmdPort=6431, DataPort=6432, ImageWidth=512, ImageH
 #    Core.DebParams.setTypeFlags(Core.DebParams.AllFlags)
     if _MerlinInterface is None:
         print 'Starting and configuring the Merlin camera ...'
-        print HostName
-        print CmdPort
-        print DataPort
-        print ImageWidth
-        print ImageHeight
-        print Chips
-        print Simulate
         _MerlinCamera = MerlinAcq.Camera(HostName, int(CmdPort), int(DataPort), int(ImageWidth), int(ImageHeight), int(Chips), bool(Simulate))
         _MerlinInterface = MerlinAcq.Interface(_MerlinCamera)
         print 'Merlin Camera (%s:%s) is started'%(_MerlinCamera.getDetectorType(),_MerlinCamera.getDetectorModel())
