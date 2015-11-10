@@ -43,12 +43,9 @@ import PyTango
 import pdb
 from Lima import Core
 from Lima import Pco as PcoAcq
-#from LimaCCDs import CallableReadEnum,CallableWriteEnum
-#from AttrHelper import get_attr_4u, get_attr_string_value_list,_getDictKey, _getDictValue
+from LimaCCDs import CallableReadEnum,CallableWriteEnum
+from AttrHelper import get_attr_4u, get_attr_string_value_list,_getDictKey, _getDictValue
 
-# import some useful helpers to create direct mapping between tango attributes
-# and Lima interfaces.
-from AttrHelper import get_attr_4u, get_attr_string_value_list
 
 RESET_CLOSE_INTERFACE	= 100
 
