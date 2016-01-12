@@ -51,9 +51,11 @@ static const char *RcsId = "$Id:  $";
 //  Status  |  dev_status()
 //
 //===================================================================
+
+
+
 #include <VieworksVP.h>
 #include <VieworksVPClass.h>
-
 #include <tango.h>
 #include <PogoHelper.h>
 
@@ -123,7 +125,6 @@ void VieworksVP::delete_device()
 
     DELETE_DEVSTRING_ATTRIBUTE(attr_testImageStr_read);
     DELETE_DEVSTRING_ATTRIBUTE(attr_dataBitsStr_read);
-    DELETE_DEVSTRING_ATTRIBUTE(attr_adcGainStr_read);
     DELETE_DEVSTRING_ATTRIBUTE(attr_mCUVersion_read);
     DELETE_DEVSTRING_ATTRIBUTE(attr_modelNumber_read);
     DELETE_DEVSTRING_ATTRIBUTE(attr_fPGAVersion_read);
@@ -176,7 +177,6 @@ void VieworksVP::init_device()
 
     CREATE_DEVSTRING_ATTRIBUTE(attr_testImageStr_read,MAX_STRING_LENGTH);
     CREATE_DEVSTRING_ATTRIBUTE(attr_dataBitsStr_read,MAX_STRING_LENGTH);
-    CREATE_DEVSTRING_ATTRIBUTE(attr_adcGainStr_read,MAX_STRING_LENGTH);
     CREATE_DEVSTRING_ATTRIBUTE(attr_mCUVersion_read,MAX_STRING_LENGTH);
     CREATE_DEVSTRING_ATTRIBUTE(attr_modelNumber_read,MAX_STRING_LENGTH);
     CREATE_DEVSTRING_ATTRIBUTE(attr_fPGAVersion_read,MAX_STRING_LENGTH);
@@ -193,12 +193,28 @@ void VieworksVP::init_device()
         //in fact LimaDetector is create the singleton control objet
         //so this call, will only return existing object, no need to give it the ip !!
         m_ct = ControlFactory::instance().get_control("VieworksVP");
-        
+
         //- get interface to specific camera
         m_hw = dynamic_cast<lima::VieworksVP::Interface*> (m_ct->hwInterface());
+        if (m_hw == 0)
+        {
+            INFO_STREAM << "Initialization Failed : Unable to get the interface of camera plugin !" << std::endl;
+            m_status_message << "Initialization Failed : Unable to get the interface of camera plugin !" << std::endl;
+            m_is_device_initialized = false;
+            set_state(Tango::FAULT);
+            return;
+        }
 
         //- get camera to specific detector
-		m_camera = &(m_hw->getCamera());	
+		m_camera = &(m_hw->getCamera());
+		if(m_camera == 0)
+		{
+			INFO_STREAM<<"Initialization Failed : Unable to get the camera of plugin !"<<endl;
+			m_status_message <<"Initialization Failed : Unable to get the camera object !"<< endl;
+			m_is_device_initialized = false;
+			set_state(Tango::FAULT);
+			return;			
+		}		
     }
     catch (Exception& e)
     {
@@ -219,7 +235,7 @@ void VieworksVP::init_device()
 
     m_is_device_initialized = true;
     set_state(Tango::STANDBY);
-    dev_state();
+    this->dev_state();
 }
 
 
@@ -1001,7 +1017,7 @@ void VieworksVP::read_triggerPolarity(Tango::Attribute &attr)
 
     try
     {
-        m_camera->getTriggerPolaroty(*attr_triggerPolarity_read);
+        m_camera->getTriggerPolarity(*attr_triggerPolarity_read);
         attr.set_value(attr_triggerPolarity_read);
     }
     catch(Tango::DevFailed& df)
@@ -1073,8 +1089,11 @@ void VieworksVP::read_strobeOffsetMs(Tango::Attribute &attr)
 
     try
     {
-        m_camera->getStrobeOffsetMus(*attr_strobeOffsetMs_read);
-        *attr_strobeOffsetMs_read = *attr_strobeOffsetMs_read / 1000; //- plugin return us so we transform into ms
+      // To insure that the passing by reference on getStrobeXXX is
+      // not affected by variation on the definition of DevULong
+      unsigned int strobe_cache = *attr_strobeOffsetMs_read;
+        m_camera->getStrobeOffsetMus(strobe_cache);
+        *attr_strobeOffsetMs_read = strobe_cache / 1000; //- plugin return us so we transform into ms
         attr.set_value(attr_strobeOffsetMs_read);
     }
     catch(Tango::DevFailed& df)
@@ -1507,7 +1526,11 @@ void VieworksVP::read_temperatureSP(Tango::Attribute &attr)
 
     try
     {
-        m_camera->getTemperatureSP(*attr_temperatureSP_read);
+      // To insure that the passing by reference on getStrobeXXX is
+      // not affected by variation on the definition of DevULong
+      int temp_cache = *attr_temperatureSP_read;
+        m_camera->getTemperatureSP(temp_cache);
+      *attr_temperatureSP_read = temp_cache;
         attr.set_value(attr_temperatureSP_read);
     }
     catch(Tango::DevFailed& df)
