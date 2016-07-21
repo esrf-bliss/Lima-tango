@@ -221,7 +221,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label':'Fast trigger mode, see manual for usage',
              'unit': 'N/A',
              'format': '',
              'description': 'OFF or ON',
@@ -231,7 +230,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label':'Shutter output level, see manual for usage',
              'unit': 'N/A',
              'format': '',
              'description': 'LOW or HIGH',
@@ -241,7 +239,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label':'Set/get the temperature set-point',
              'unit': 'C',
              'format': '%1d',
              'description': 'in Celsius',
@@ -251,7 +248,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ],
          {
-             'label':'get the current temperature sensor',
              'unit': 'C',
              'format': '%1d',
              'description': 'in Celsius',
@@ -261,7 +257,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label':'Start/stop the cooler',
              'unit': 'N/A',
              'format': '',
              'description': 'OFF or ON',
@@ -271,7 +266,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ],
          {
-             'label':'Fast trigger mode, see manual for usage',
              'unit': 'N/A',
              'format': '%1d',
              'description': '0-OFF / 1-ON',
@@ -281,7 +275,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SPECTRUM,
           PyTango.READ,2],
         {
-             'label':'Timing values, exposure and latency times',
              'unit': 'second',
              'format': '%f',
              'description': '[0]: exposure, [1]: latency',
@@ -291,7 +284,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label':'Preamplifier Gain',
              'unit': 'N/A',
              'format': '%d',
              'description': 'Premplifier Gain which can be apply to the readout, from 0-N, check the camera documentation for the valid range',
@@ -301,7 +293,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label':'Vertical shift speed',
              'unit': 'N/A',
              'format': '%d',
              'description': 'Vertical shift speed,  from 0-N, check the camera documentation for the valid range, -1 to set the max. speed',
@@ -311,7 +302,6 @@ class AndorClass(PyTango.DeviceClass):
           PyTango.SCALAR,
           PyTango.READ_WRITE],
          {
-             'label': 'ADC/HSspeed pairs of possible combination',
              'unit': 'N/A',
              'format': '%d',
              'description': 'ADC and Horizontal shift speed in the range [0-N], check the documentatio for more help, -1 to set the max ADC/speed pair',
