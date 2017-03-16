@@ -1,3 +1,0 @@
-[submodule "plugins/bpm_server"]
-	path = plugins/bpm_server
-	url = git://github.com/esrf-bliss/Lima-tango-plugin-bpm.git
